@@ -22,3 +22,11 @@ See Documentation for the [Main Service](https://github.com/blueperf/acmeair-mai
 
 See Documentation for the [Main Service](https://github.com/blueperf/acmeair-mainservice-java)
 
+## User-added Docs
+Added REST call to get base cost (economy) and the bonus miles of a flight.
+```
+# expected response: cost and miles as json:
+FLIGHTID=<idOfFlightInDB>
+curl http://localhost/flight/getcostandmiles/$FLIGHTID
+```
+

@@ -1,12 +1,9 @@
 /*******************************************************************************
  * Copyright (c) 2015 IBM Corp.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *    http://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,8 +13,6 @@
 
 package com.acmeair.mongo.services;
 
-import static com.mongodb.client.model.Filters.eq;
-
 import com.acmeair.AirportCodeMapping;
 import com.acmeair.service.FlightService;
 import com.acmeair.service.KeyGenerator;
@@ -25,6 +20,14 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
+import jakarta.json.JsonReaderFactory;
+import org.bson.Document;
 
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -33,20 +36,12 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonReader;
-import jakarta.json.JsonReaderFactory;
-
-import org.bson.Document;
+import static com.mongodb.client.model.Filters.eq;
 
 @ApplicationScoped
 public class FlightServiceImpl extends FlightService {
 
-  private static final Logger logger = Logger.getLogger(FlightServiceImpl.class.getName()); 
+  private static final Logger logger = Logger.getLogger(FlightServiceImpl.class.getName());
   private static final JsonReaderFactory factory = Json.createReaderFactory(null);
 
   private MongoCollection<Document> flight;
@@ -135,7 +130,7 @@ public class FlightServiceImpl extends FlightService {
 
       if (deptDate != null) {
         if (logger.isLoggable(Level.FINE)) {
-          logger.fine("getFlghtBySegment Search String : " 
+          logger.fine("getFlghtBySegment Search String : "
               + new BasicDBObject("flightSegmentId", segmentJson.getString("_id"))
               .append("scheduledDepartureTime", deptDate).toJson());
         }
@@ -213,22 +208,22 @@ public class FlightServiceImpl extends FlightService {
     flight.insertOne(flightDoc);
   }
 
-  @Override 
+  @Override
   public void storeFlightSegment(String flightSeg) {
     try {
       JsonReader jsonReader = factory.createReader(new StringReader(flightSeg));
       JsonObject flightSegJson = jsonReader.readObject();
       jsonReader.close();
-      storeFlightSegment(flightSegJson.getString("_id"), 
-          flightSegJson.getString("originPort"), 
-          flightSegJson.getString("destPort"), 
+      storeFlightSegment(flightSegJson.getString("_id"),
+          flightSegJson.getString("originPort"),
+          flightSegJson.getString("destPort"),
           flightSegJson.getInt("miles"));
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
 
-  @Override 
+  @Override
   public void storeFlightSegment(String flightName, String origPort, String destPort, int miles) {
     Document flightSegmentDoc = new Document("_id", flightName)
         .append("originPort", origPort)
@@ -267,5 +262,46 @@ public class FlightServiceImpl extends FlightService {
   @Override
   public boolean isConnected() {
     return (flight.countDocuments() >= 0);
+  }
+
+  //USER ADDED CODE
+
+  /**
+   * Method to find base economy cost of a flight in the service's database corresponding to the passed flight id.
+   * @param flightId unique key of flight in db
+   * @return base economy cost of the flight
+   */
+  @Override
+  public Long getBaseCostById(String flightId) {
+    String flightById = flight.find(eq("_id", flightId)).first().toJson();
+
+    JsonReader jsonReader = factory.createReader(new StringReader(flightById));
+    JsonObject flightByIdJson = jsonReader.readObject();
+    jsonReader.close();
+
+    return flightByIdJson.getJsonNumber("economyClassBaseCost").longValue();
+  }
+
+  /**
+   * Method to find base economy cost and bonus miles of a flight in the service's database
+   * corresponding to the passed flight id.
+   * @param flightId unique key of flight in db
+   * @return base economy cost and bonus miles of the flight
+   */
+  @Override
+  public List<Long> getCostAndMilesById(String flightId) {
+    //search flight by ID
+    String flightById = flight.find(eq("_id", flightId)).first().toJson();
+
+    //create Json Object from response
+    JsonReader jsonReader = factory.createReader(new StringReader(flightById));
+    JsonObject flightByIdJson = jsonReader.readObject();
+    jsonReader.close();
+
+    List<Long> costAndMiles = new ArrayList<>();
+    costAndMiles.add(flightByIdJson.getJsonNumber("economyClassBaseCost").longValue());
+    costAndMiles.add(getRewardMiles(flightByIdJson.getJsonString("flightSegmentId").getString()));
+
+    return costAndMiles;
   }
 }

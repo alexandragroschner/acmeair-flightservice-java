@@ -1,12 +1,9 @@
 /*******************************************************************************
  * Copyright (c) 2013 IBM Corp.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *    http://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,12 +30,7 @@ import jakarta.json.JsonBuilderFactory;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonReader;
 import jakarta.json.JsonReaderFactory;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.FormParam;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -226,5 +218,15 @@ public class FlightServiceRest {
     jsonReader.close();
 
     return flightsJsonArray;
-  }  
+  }
+
+  //USER ADDED CODE
+  @GET
+  @Path("getcostandmiles/{flightId}")
+  @Produces("application/json")
+  public CostAndMilesResponse getCostAndMiles(@PathParam("flightId") String flightId) {
+    List<Long> costAndMiles = flightService.getCostAndMilesById(flightId);
+
+    return new CostAndMilesResponse(costAndMiles.get(0), costAndMiles.get(1));
+  }
 }
