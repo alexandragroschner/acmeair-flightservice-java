@@ -68,19 +68,29 @@ public class FlightServiceImpl extends FlightService {
 
   @Override
   public Long countFlights() {
+    /* REMOVED DB CALL
     return flight.countDocuments();
+     */
+    return 1L;
   }
 
   @Override
   public Long countFlightSegments() {
+    /* REMOVED DB CALL
     return flightSegment.countDocuments();
+     */
+    return 1L;
   }
 
   @Override
   public Long countAirports() {
+    /* REMOVED DB CALL
     return airportCodeMapping.countDocuments();
+     */
+    return 1L;
   }
 
+  // function is never called, no need to remove DB call
   protected String getFlight(String flightId, String segmentId) {
     return flight.find(eq("_id", flightId)).first().toJson();
   }
@@ -88,8 +98,18 @@ public class FlightServiceImpl extends FlightService {
   @Override
   protected  String getFlightSegment(String fromAirport, String toAirport) {
     try {
+      /* REMOVED DB CALL
       return flightSegment.find(new BasicDBObject("originPort", fromAirport)
           .append("destPort", toAirport)).first().toJson();
+       */
+      // ADDED HARD-CODED SEGMENT
+      Document flightSegmentDoc = new Document("_id", "AA0")
+              .append("originPort", fromAirport)
+              .append("destPort", toAirport)
+              .append("miles", "4258");
+
+      return flightSegmentDoc.toJson();
+
     } catch (java.lang.NullPointerException e) {
       if (logger.isLoggable(Level.FINE)) {
         logger.fine("getFlghtSegment returned no flightSegment available");
@@ -101,9 +121,17 @@ public class FlightServiceImpl extends FlightService {
   @Override
   protected  Long getRewardMilesFromSegment(String segmentId) {
     try {
+      /* REMOVED DB CALL
       String segment = flightSegment.find(new BasicDBObject("_id", segmentId)).first().toJson();
+       */
 
-      JsonReader jsonReader = factory.createReader(new StringReader(segment));
+      // ADDED HARD-CODED SEGMENT
+      Document flightSegmentDoc = new Document("_id", "AA0")
+              .append("originPort", "AMS")
+              .append("destPort", "BOM")
+              .append("miles", 4258);
+
+      JsonReader jsonReader = factory.createReader(new StringReader(flightSegmentDoc.toJson()));
       JsonObject segmentJson = jsonReader.readObject();
       jsonReader.close();
 
@@ -127,6 +155,7 @@ public class FlightServiceImpl extends FlightService {
       JsonObject segmentJson = jsonReader.readObject();
       jsonReader.close();
       MongoCursor<Document> cursor;
+      List<String> flights =  new ArrayList<String>();
 
       if (deptDate != null) {
         if (logger.isLoggable(Level.FINE)) {
@@ -134,13 +163,45 @@ public class FlightServiceImpl extends FlightService {
               + new BasicDBObject("flightSegmentId", segmentJson.getString("_id"))
               .append("scheduledDepartureTime", deptDate).toJson());
         }
+        /* REMOVED DB CALL
         cursor = flight.find(new BasicDBObject("flightSegmentId", segmentJson.getString("_id"))
             .append("scheduledDepartureTime", deptDate)).iterator();
+         */
+        // ADDED HARD-CODED FLIGHT
+        Document flightDoc = new Document("_id", "b7e3b028-7248-4763-b2a4-1b9c502664a1")
+                .append("firstClassBaseCost", 500)
+                .append("economyClassBaseCost", 200)
+                .append("numFirstClassSeats", 10)
+                .append("numEconomyClassSeats", 200)
+                .append("airplaneTypeId", "B747")
+                .append("flightSegmentId", "AA3")
+                .append("scheduledDepartureTime", deptDate.toString())
+                .append("scheduledArrivalTime", deptDate.toString())
+                .append("flightSegment", segmentJson);
+
+        flights.add(flightDoc.toJson());
+        flights.add(flightDoc.toJson());
       } else {
+        /* REMOVED DB CALL
         cursor = flight.find(eq("flightSegmentId", segmentJson.getString("_id"))).iterator();
+         */
+
+        // ADDED HARD-CODED FLIGHT
+        Document flightDoc = new Document("_id", "b7e3b028-7248-4763-b2a4-1b9c502664a1")
+                .append("firstClassBaseCost", 500)
+                .append("economyClassBaseCost", 200)
+                .append("numFirstClassSeats", 10)
+                .append("numEconomyClassSeats", 200)
+                .append("airplaneTypeId", "B747")
+                .append("flightSegmentId", "AA3")
+                .append("scheduledDepartureTime", "ISODate(\"2024-04-02T00:00:00.000Z\")")
+                .append("scheduledArrivalTime", "ISODate(\"2024-04-02T14:15:00.000Z\")")
+                .append("flightSegment", segmentJson);
+
+        flights.add(flightDoc.toJson());
       }
 
-      List<String> flights =  new ArrayList<String>();
+      /* REMOVED DB CALL
       try {
         while (cursor.hasNext()) {
           Document tempDoc = cursor.next();
@@ -168,6 +229,7 @@ public class FlightServiceImpl extends FlightService {
       } finally {
         cursor.close();
       }
+      */
       return flights;
     } catch (Exception e) {
       e.printStackTrace();
@@ -247,6 +309,7 @@ public class FlightServiceImpl extends FlightService {
 
   @Override
   public boolean isPopulated() {
+    /* REMOVED DB CALL
     if (isPopulated) {
       return true;
     }
@@ -257,11 +320,16 @@ public class FlightServiceImpl extends FlightService {
     } else {
       return false;
     }
+     */
+    return true;
   }
 
   @Override
   public boolean isConnected() {
+    /* REMOVED DB CALL
     return (flight.countDocuments() >= 0);
+     */
+    return true;
   }
 
   //USER ADDED CODE
@@ -273,9 +341,22 @@ public class FlightServiceImpl extends FlightService {
    */
   @Override
   public Long getBaseCostById(String flightId) {
+    /* REMOVED DB CALL
     String flightById = flight.find(eq("_id", flightId)).first().toJson();
+     */
 
-    JsonReader jsonReader = factory.createReader(new StringReader(flightById));
+    // ADDED HARD-CODED FLIGHT
+    Document flightDoc = new Document("_id", "cad686d7-a1d3-4666-a6bd-33612cdee146")
+            .append("firstClassBaseCost", 300)
+            .append("economyClassBaseCost", 200)
+            .append("numFirstClassSeats", 20)
+            .append("numEconomyClassSeats", 100)
+            .append("airplaneTypeId", "B747")
+            .append("flightSegmentId", "AA3")
+            .append("scheduledDepartureTime", new Date().toString())
+            .append("scheduledArrivalTime", new Date().toString());
+
+    JsonReader jsonReader = factory.createReader(new StringReader(flightDoc.toJson()));
     JsonObject flightByIdJson = jsonReader.readObject();
     jsonReader.close();
 
@@ -290,11 +371,24 @@ public class FlightServiceImpl extends FlightService {
    */
   @Override
   public List<Long> getCostAndMilesById(String flightId) {
+    /* REMOVED DB CALL
     //search flight by ID
     String flightById = flight.find(eq("_id", flightId)).first().toJson();
+     */
+
+    // ADDED HARD-CODED FLIGHT
+    Document flightDoc = new Document("_id", flightId)
+            .append("firstClassBaseCost", 300)
+            .append("economyClassBaseCost", 200)
+            .append("numFirstClassSeats", 20)
+            .append("numEconomyClassSeats", 100)
+            .append("airplaneTypeId", "B747")
+            .append("flightSegmentId", "AA3")
+            .append("scheduledDepartureTime", new Date().toString())
+            .append("scheduledArrivalTime", new Date().toString());
 
     //create Json Object from response
-    JsonReader jsonReader = factory.createReader(new StringReader(flightById));
+    JsonReader jsonReader = factory.createReader(new StringReader(flightDoc.toJson()));
     JsonObject flightByIdJson = jsonReader.readObject();
     jsonReader.close();
 
