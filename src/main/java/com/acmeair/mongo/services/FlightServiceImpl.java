@@ -29,6 +29,9 @@ import jakarta.json.JsonReader;
 import jakarta.json.JsonReaderFactory;
 import org.bson.Document;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
@@ -106,7 +109,7 @@ public class FlightServiceImpl extends FlightService {
       Document flightSegmentDoc = new Document("_id", "AA0")
               .append("originPort", fromAirport)
               .append("destPort", toAirport)
-              .append("miles", "4258");
+              .append("miles", 4258);
 
       return flightSegmentDoc.toJson();
 
@@ -151,16 +154,14 @@ public class FlightServiceImpl extends FlightService {
   @Override
   protected  List<String> getFlightBySegment(String segment, Date deptDate) {
     try {
-      JsonReader jsonReader = factory.createReader(new StringReader(segment));
-      JsonObject segmentJson = jsonReader.readObject();
-      jsonReader.close();
+      JSONObject segmentJson = (JSONObject) new JSONParser().parse(segment);
       MongoCursor<Document> cursor;
       List<String> flights =  new ArrayList<String>();
 
       if (deptDate != null) {
         if (logger.isLoggable(Level.FINE)) {
           logger.fine("getFlghtBySegment Search String : "
-              + new BasicDBObject("flightSegmentId", segmentJson.getString("_id"))
+              + new BasicDBObject("flightSegmentId", segmentJson.get("_id"))
               .append("scheduledDepartureTime", deptDate).toJson());
         }
         /* REMOVED DB CALL
@@ -181,6 +182,7 @@ public class FlightServiceImpl extends FlightService {
 
         flights.add(flightDoc.toJson());
         flights.add(flightDoc.toJson());
+
       } else {
         /* REMOVED DB CALL
         cursor = flight.find(eq("flightSegmentId", segmentJson.getString("_id"))).iterator();

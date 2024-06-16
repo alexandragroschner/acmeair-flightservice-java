@@ -129,8 +129,7 @@ public abstract class FlightService {
         if (logger.isLoggable(Level.FINE)) {
           logger.fine("Segment is null");
         }
-        
-        return new ArrayList<String>(); 
+        return new ArrayList<String>();
       }
 
       String flightSegmentIdAndScheduledDepartureTimeQueryString = segId + deptDate.toString();
